@@ -1,4 +1,4 @@
-# fsi-dnsdb
+# dnsdb
 
 Python client for Farsight Security's [DNSDB API](https://api.dnsdb.info/).
 
@@ -13,10 +13,10 @@ Python client for Farsight Security's [DNSDB API](https://api.dnsdb.info/).
 
 ## Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install fsi-dnsdb.
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install dnsdb.
 
 ```bash
-pip install fsi-dnsdb
+pip install dnsdb
 ```
 
 ## Usage
