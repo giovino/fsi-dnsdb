@@ -1,8 +1,13 @@
 [tool.poetry]
 name = "dnsdb"
-version = "0.1.0"
-description = "A Python Client to interact with Farsight Security's DNSDB API"
+version = "0.1.1"
+description = "Python client for Farsight Security's DNSDB API"
+license = "MIT"
 authors = ["Gabriel Iovino <giovino@gmail.com>"]
+readme = "README.md"
+homepage = "https://github.com/giovino/fsi-dnsdb"
+repository = "https://github.com/giovino/fsi-dnsdb"
+keywords = ["security"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
