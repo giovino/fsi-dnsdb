@@ -21,13 +21,26 @@ dnsdb = Dnsdb(api_key)
 
 SIMPLE USAGE EXAMPLES:::
 
-results = dnsdb.search(name="fsi.io")
-results = dnsdb.search(name="mail.fsi.io", inverse=True)
-results = dnsdb.search(ip="104.244.14.108")
-results = dnsdb.search(ip="104.244.14.0/24")
-results = dnsdb.search(ip="2620:11c:f008::108")
-results = dnsdb.search(hexadecimal="36757a35")
-quota = dnsdb.quota()
+result = dnsdb.search(name="fsi.io")
+result = dnsdb.search(name="mail.fsi.io", inverse=True)
+result = dnsdb.search(ip="104.244.14.108")
+result = dnsdb.search(ip="104.244.14.0/24")
+result = dnsdb.search(ip="2620:11c:f008::108")
+result = dnsdb.search(hexadecimal="36757a35")
+result = dnsdb.search(name="fsi.io", type="A")
+result = dnsdb.search(name="farsightsecurity.com", bailiwick="com.")
+result = dnsdb.search(name="fsi.io", wildcard_left=True)
+result = dnsdb.search(name="fsi", wildcard_right=True)
+result = dnsdb.search(name="fsi.io", sort=False)
+result = dnsdb.search(name="fsi.io", remote_limit=150000, return_limit=1000)
+result = dnsdb.search(name="fsi.io", time_last_after=1514764800)
+result = dnsdb.search(name="fsi.io", epoch=True)
+result = dnsdb.quota()
+
+print(result.records)
+print(result.status_code)
+print(result.error)
+print(result.quota)
 """
 
 import json
@@ -39,7 +52,8 @@ class Dnsdb:
     """
     A dnsdb object for the Farsight Security DNSDB API
     """
-    def __init__(self, api_key=None, server='https://api.dnsdb.info'):
+
+    def __init__(self, api_key=None, server="https://api.dnsdb.info"):
         """
         :param api_key: string (required)
         :param server: string (optional: default=https://api.dnsdb.info)
@@ -56,23 +70,25 @@ class Dnsdb:
         if api_key is None:
             raise Exception("You must supply a DNSDB API key.")
 
-    def search(self,
-               name=None,
-               ip=None,
-               hexadecimal=None,
-               type="ANY",
-               bailiwick=None,
-               wildcard_left=None,
-               wildcard_right=None,
-               inverse=False,
-               sort=True,
-               return_limit=10000,
-               remote_limit=50000,
-               epoch=False,
-               time_first_before=None,
-               time_first_after=None,
-               time_last_before=None,
-               time_last_after=None):
+    def search(
+        self,
+        name=None,
+        ip=None,
+        hexadecimal=None,
+        type="ANY",
+        bailiwick=None,
+        wildcard_left=None,
+        wildcard_right=None,
+        inverse=False,
+        sort=True,
+        return_limit=10000,
+        remote_limit=50000,
+        epoch=False,
+        time_first_before=None,
+        time_first_after=None,
+        time_last_before=None,
+        time_last_after=None,
+    ):
         """
         A method of the DNSDB Class to search the DNSDB API.
 
@@ -102,29 +118,29 @@ class Dnsdb:
         :param time_last_before:
         :param time_last_after:
 
-        :return: List of dictionaries
+        :return: Object
         """
 
         options = dict()
 
-        options['name'] = name
-        options['ip'] = ip
-        options['hex'] = hexadecimal
-        options['type'] = type
-        options['bailiwick'] = bailiwick
-        options['wildcard_left'] = wildcard_left
-        options['wildcard_right'] = wildcard_right
-        options['inverse'] = inverse
-        options['sort'] = sort
-        options['return_limit'] = return_limit
-        options['remote_limit'] = remote_limit
-        options['epoch'] = epoch
-        options['time_first_before'] = time_first_before
-        options['time_first_after'] = time_first_after
-        options['time_last_before'] = time_last_before
-        options['time_last_after'] = time_last_after
-        options['api_key'] = self.api_key
-        options['server'] = self.server
+        options["name"] = name
+        options["ip"] = ip
+        options["hex"] = hexadecimal
+        options["type"] = type
+        options["bailiwick"] = bailiwick
+        options["wildcard_left"] = wildcard_left
+        options["wildcard_right"] = wildcard_right
+        options["inverse"] = inverse
+        options["sort"] = sort
+        options["return_limit"] = return_limit
+        options["remote_limit"] = remote_limit
+        options["epoch"] = epoch
+        options["time_first_before"] = time_first_before
+        options["time_first_after"] = time_first_after
+        options["time_last_before"] = time_last_before
+        options["time_last_after"] = time_last_after
+        options["api_key"] = self.api_key
+        options["server"] = self.server
 
         options = utils.validate_options(options)
 
@@ -132,32 +148,45 @@ class Dnsdb:
 
         results = _query(options, uri)
 
-        if 'error' in results[0]:
+        if results.status_code == 200:
+            results = utils.post_process(options, results)
             return results
 
-        results = utils.post_process(options, results)
         return results
 
     def quota(self):
         """
         Query DNSDB API for the current quota of the given API key
 
-        :return: List
+        :return: Object
         """
 
         options = dict()
-        options['api_key'] = self.api_key
-        options['server'] = self.server
+        options["api_key"] = self.api_key
+        options["server"] = self.server
 
-        path = '/lookup/rate_limit'
+        path = "/lookup/rate_limit"
 
-        uri_parts = (options['server'], path)
+        uri_parts = (options["server"], path)
 
-        uri = ''.join(uri_parts)
+        uri = "".join(uri_parts)
 
         results = _query(options, uri, quota=True)
 
         return results
+
+
+class Result:
+    """
+    A object to store the results of a DNSDB Search and related meta data.
+    """
+
+    def __init__(self, records=None, status_code=None, error=None, quota=None):
+
+        self.status_code = status_code
+        self.records = records
+        self.error = error
+        self.quota = quota
 
 
 def _query(options, uri, quota=False):
@@ -166,36 +195,40 @@ def _query(options, uri, quota=False):
 
     :param uri: string
     :param quota: boolean (default: False)
-    :return: List
+    :return: Object
     """
 
-    results = []
-    error = {'error': {'code': None,
-                       'message': ''}}
+    results = Result()
+    error = dict()
+    error.update({"code": None, "message": None})
 
-    headers = {
-        'Accept': 'application/json',
-        'X-API-Key': options['api_key']
-    }
+    headers = {"Accept": "application/json", "X-API-Key": options["api_key"]}
 
     resp = requests.get(uri, headers=headers, stream=True)
+    results.status_code = resp.status_code
+    results.quota = utils.get_quota(response_headers=resp.headers)
 
     if resp.status_code == 200:
+        records = []
 
         if quota is True:
-            results.append(resp.json())
-            return resp.status_code, results
+            response = resp.json()
+            results.quota = utils.get_quota(rate_limit=response["rate"])
+            return results
 
         for line in resp.iter_lines():
             if line:
-                decoded_line = line.decode('utf-8')
-                results.append(json.loads(decoded_line))
+                decoded_line = line.decode("utf-8")
+                records.append(json.loads(decoded_line))
+        results.records = records
     else:
-        error['error']['code'] = resp.status_code
+        error["code"] = resp.status_code
+
         if resp.content:
-            error['error']['message'] = resp.content.decode('utf-8').rstrip()
+            error["message"] = resp.content.decode("utf-8").rstrip()
         else:
-            error['error']['message'] = 'Unavailable'
-        results.append(error)
+            error["message"] = "Unavailable"
+
+        results.error = error
 
     return results

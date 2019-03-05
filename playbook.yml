@@ -30,6 +30,8 @@
         - python3-venv
         - python3-pytest
         - pylint3
+        - black
+        - flake8
     - name: Install python modules with pip
       pip:
         name: "{{ modules }}"
@@ -38,3 +40,7 @@
         modules:
         - poetry
         - ipython
+    - name: Add Python Path to bashrc
+      lineinfile:
+        path: /home/vagrant/.bashrc
+        line: export PYTHONPATH=:/vagrant
