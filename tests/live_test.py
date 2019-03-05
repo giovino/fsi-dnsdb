@@ -5,6 +5,6 @@ api_key = ''
 
 dnsdb = Dnsdb(api_key)
 
-results = dnsdb.search(name="fsi.io")
+result = dnsdb.search(name="fsi.io")
 
-utils.debug(results, limit=2)
+utils.debug(result.records, limit=2)
