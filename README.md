@@ -16,7 +16,7 @@ Python client for Farsight Security's [DNSDB API](https://api.dnsdb.info/).
 
 ## Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install dnsdb.
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install [dnsdb](https://pypi.org/project/dnsdb/).
 
 ```bash
 pip install dnsdb
