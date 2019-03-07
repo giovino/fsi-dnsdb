@@ -196,8 +196,7 @@ def test_build_uri_name_type():
 
 
 def test_build_uri_name_bailiwick():
-    valid = "https://api.dnsdb.info/lookup/rrset/name/fsi.io/ANY/io.?limit" \
-            "=50000"
+    valid = "https://api.dnsdb.info/lookup/rrset/name/fsi.io/ANY/io.?limit" "=50000"
 
     options = get_options()
     options["name"] = "fsi.io"
@@ -338,52 +337,67 @@ def test_build_uri_name_time_all():
 
 
 def test_get_quota_one():
-    response_headers = {'Server': 'nginx/1.10.3',
-                        'Date': 'Tue, 05 Mar 2019 18:58:04 GMT',
-                        'Content-Type': 'application/json',
-                        'Transfer-Encoding': 'chunked',
-                        'Connection': 'keep-alive', 'Vary': 'Accept-Encoding',
-                        'X-RateLimit-Limit': '1000000',
-                        'X-RateLimit-Remaining': '999954',
-                        'X-RateLimit-Reset': '1551830400',
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Expose-Headers': 'X-RateLimit-Limit, '
-                                                         'X-RateLimit-Remaining, X-RateLimit-Reset',
-                        'Access-Control-Max-Age': '86400',
-                        'Access-Control-Allow-Credentials': 'true',
-                        'Access-Control-Allow-Methods': 'GET, POST',
-                        'Access-Control-Allow-Headers': 'Accept, '
-                                                        'Cache-Control, '
-                                                        'Pragma, Origin, '
-                                                        'Authorization, '
-                                                        'Cookie, '
-                                                        'Content-Type, '
-                                                        'X-API-Key',
-                        'Strict-Transport-Security': 'max-age=15768000',
-                        'Expires': '-1', 'Cache-Control': 'private, max-age=0',
-                        'Content-Encoding': 'gzip'}
+    response_headers = {
+        "Server": "nginx/1.10.3",
+        "Date": "Tue, 05 Mar 2019 18:58:04 GMT",
+        "Content-Type": "application/json",
+        "Transfer-Encoding": "chunked",
+        "Connection": "keep-alive",
+        "Vary": "Accept-Encoding",
+        "X-RateLimit-Limit": "1000000",
+        "X-RateLimit-Remaining": "999954",
+        "X-RateLimit-Reset": "1551830400",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Expose-Headers": "X-RateLimit-Limit, "
+        "X-RateLimit-Remaining, X-RateLimit-Reset",
+        "Access-Control-Max-Age": "86400",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET, POST",
+        "Access-Control-Allow-Headers": "Accept, "
+        "Cache-Control, "
+        "Pragma, Origin, "
+        "Authorization, "
+        "Cookie, "
+        "Content-Type, "
+        "X-API-Key",
+        "Strict-Transport-Security": "max-age=15768000",
+        "Expires": "-1",
+        "Cache-Control": "private, max-age=0",
+        "Content-Encoding": "gzip",
+    }
 
     quota = utils.get_quota(response_headers=response_headers)
-    assert quota['remaining'] == '999954'
+    assert quota["remaining"] == "999954"
 
 
 def test_get_quota_two():
     rate_limit = {
-        'rate': {'reset': 1551830400, 'results_max': 1000000, 'limit': 1000000,
-                 'remaining': 999953}}
+        "rate": {
+            "reset": 1551830400,
+            "results_max": 1000000,
+            "limit": 1000000,
+            "remaining": 999953,
+        }
+    }
 
-    quota = utils.get_quota(rate_limit=rate_limit['rate'])
-    assert quota['remaining'] == 999953
+    quota = utils.get_quota(rate_limit=rate_limit["rate"])
+    assert quota["remaining"] == 999953
 
 
 def test_normalize_rate():
     rate_limit = {
-        'rate': {'reset': 'n/a', 'results_max': 1000000, 'expires': 1569888000,
-                 'limit': 25000, 'remaining': 24783}}
+        "rate": {
+            "reset": "n/a",
+            "results_max": 1000000,
+            "expires": 1569888000,
+            "limit": 25000,
+            "remaining": 24783,
+        }
+    }
 
-    rate = utils.get_quota(rate_limit=rate_limit['rate'])
+    rate = utils.get_quota(rate_limit=rate_limit["rate"])
     quota = utils.normalize_rate(rate)
-    assert quota['reset'] is None
+    assert quota["reset"] is None
 
 
 def test_post_process_name_sort():
@@ -422,3 +436,39 @@ def test_post_process_name_return_limit():
     result = utils.post_process(options, result)
     records = result.records
     assert len(records) == 1
+
+
+def test_epoch_timestamp():
+
+    timestamp = 1546300800
+
+    options = get_options()
+    options["time_last_after"] = timestamp
+    options["epoch"] = True
+
+    options = utils.pre_process(options)
+    assert options["time_last_after"] == 1546300800
+
+
+def test_human_date_one():
+
+    date = "2019-01-01"
+
+    options = get_options()
+    options["time_last_after"] = date
+    options["epoch"] = False
+
+    options = utils.pre_process(options)
+    assert options["time_last_after"] == 1546300800
+
+
+def test_human_date_two():
+
+    date = "2018-06-13T02:05:36Z"
+
+    options = get_options()
+    options["time_last_after"] = date
+    options["epoch"] = False
+
+    options = utils.pre_process(options)
+    assert options["time_last_after"] == 1528855536

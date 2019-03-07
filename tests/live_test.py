@@ -7,4 +7,4 @@ dnsdb = Dnsdb(api_key)
 
 result = dnsdb.search(name="fsi.io")
 
-utils.debug(result.records, limit=2)
+print(result.rescords[0])

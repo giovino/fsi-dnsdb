@@ -142,7 +142,7 @@ class Dnsdb:
         options["api_key"] = self.api_key
         options["server"] = self.server
 
-        options = utils.validate_options(options)
+        options = utils.pre_process(options)
 
         uri = utils.build_uri(options)
 

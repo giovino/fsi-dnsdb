@@ -12,6 +12,7 @@ keywords = ["security"]
 [tool.poetry.dependencies]
 python = "^3.6"
 requests = "^2.21"
+python-dateutil = "^2.8"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"
