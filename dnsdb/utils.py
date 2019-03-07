@@ -3,6 +3,8 @@
 Utility functions needed by the DNSDB module
 """
 
+from dateutil.parser import parse
+
 
 def build_uri(options):
     """
@@ -27,12 +29,10 @@ def build_path(options):
     """
     if options["name"]:
         if options["inverse"]:
-            path = "/lookup/rdata/name/{}/{}".format(options["name"],
-                                                     options["type"])
+            path = "/lookup/rdata/name/{}/{}".format(options["name"], options["type"])
             return path
         else:
-            path = "/lookup/rrset/name/{}/{}".format(options["name"],
-                                                     options["type"])
+            path = "/lookup/rrset/name/{}/{}".format(options["name"], options["type"])
 
             if options["bailiwick"]:
                 path += "/{}".format(options["bailiwick"])
@@ -161,8 +161,7 @@ def epoch_to_timestamp(records):
         timestamp_keys = ["time_first", "time_last"]
         for key in timestamp_keys:
             if key in record:
-                record[key] = datetime.fromtimestamp(
-                    record[key]).isoformat() + "Z"
+                record[key] = datetime.fromtimestamp(record[key]).isoformat() + "Z"
     return records
 
 
@@ -219,8 +218,7 @@ def validate_wildcard_left(name):
 
     if name[-1] == "*":
         raise Exception(
-            "Wildcard left lookup cannot end with an asterisk on " "the right "
-            "side"
+            "Wildcard left lookup cannot end with an asterisk on " "the right " "side"
         )
 
     # Correct wildcard syntax, do nothing
@@ -244,8 +242,7 @@ def validate_wildcard_right(name):
 
     if name[0] == "*":
         raise Exception(
-            "Wildcard right lookup cannot start with an asterisk " "on the "
-            "left side"
+            "Wildcard right lookup cannot start with an asterisk " "on the " "left side"
         )
 
     # Correct wildcard syntax, do nothing
@@ -309,3 +306,42 @@ def normalize_rate(rate):
         if rate[key] == "n/a":
             rate[key] = None
     return rate
+
+
+def pre_process(options):
+    """
+    Function to initial the pre-processing of specified options
+
+    :param options: dictionary
+    :return: dictionary
+    """
+
+    options = validate_options(options)
+
+    if options["epoch"] is False:
+        options = parse_date(options)
+
+    return options
+
+
+def parse_date(options):
+    """
+    Function to convert human readable date / time to epoch time
+
+    :param options: dictionary
+    :return: dictionary
+    """
+
+    options_time = [
+        "time_first_before",
+        "time_first_after",
+        "time_last_before",
+        "time_last_after",
+    ]
+
+    for time_field in options_time:
+        if options[time_field]:
+            dt = parse(options[time_field])
+            options[time_field] = int(dt.timestamp())
+
+    return options
