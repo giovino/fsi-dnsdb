@@ -44,7 +44,9 @@ print(result.quota)
 """
 
 import json
+import gzip
 import requests
+from diskcache import Cache
 from dnsdb import utils
 
 
@@ -53,10 +55,23 @@ class Dnsdb:
     A dnsdb object for the Farsight Security DNSDB API
     """
 
-    def __init__(self, api_key=None, server="https://api.dnsdb.info"):
+    def __init__(
+        self,
+        api_key=None,
+        server="https://api.dnsdb.info",
+        cache=False,
+        cache_location="/tmp/dnsdb-cache",
+        cache_timeout=900,
+    ):
         """
         :param api_key: string (required)
-        :param server: string (optional: default=https://api.dnsdb.info)
+        :param server: string (optional: default='https://api.dnsdb.info')
+        :param cache: boolean (optional)
+            enable caching of dnsdb results to disk
+        :param cache_location: string (optional: default='/tmp/dnsdb-cache')
+            directory to store cached results
+        :param cache_timeout: integer (optional: default=900)
+            seconds until the cached result expires
         :return: object
 
         EXAMPLE USAGE:::
@@ -66,6 +81,9 @@ class Dnsdb:
 
         self.api_key = api_key
         self.server = server
+        self.cache = cache
+        self.cache_location = cache_location
+        self.cache_timeout = cache_timeout
 
         if api_key is None:
             raise Exception("You must supply a DNSDB API key.")
@@ -106,7 +124,7 @@ class Dnsdb:
             wildcard search to the left of a dot in a domain name
         :param wildcard_right: Boolean (optional: default=None)
             wildcard search to the right of a dot in a domain name
-        :param inverse: Boolean (optional: default=False)
+        :param inverse: boolean (optional: default=False)
             search for names resolving to names (e.g. MX, NS, CNAME, etc)
             only valid when used with name
         :param sort: boolean (optional: default=True)
@@ -141,12 +159,31 @@ class Dnsdb:
         options["time_last_after"] = time_last_after
         options["api_key"] = self.api_key
         options["server"] = self.server
+        options["cache"] = self.cache
+        options["cache_location"] = self.cache_location
+        options["cache_timeout"] = self.cache_timeout
+
+        results = None
 
         options = utils.pre_process(options)
 
         uri = utils.build_uri(options)
 
-        results = _query(options, uri)
+        if options["cache"] is True:
+            cache = Cache(options["cache_location"])
+
+            cached_result = cache.get(uri)
+
+            if cached_result:
+                results = Result.to_decompressed(cached_result)
+                results.cached = True
+            else:
+                results = _query(options, uri)
+                if results.status_code == 200 or results.status_code == 404:
+                    compressed = Result.to_compressed(results)
+                    cache.set(uri, compressed, expire=options["cache_timeout"])
+        else:
+            results = _query(options, uri)
 
         if results.status_code == 200:
             results = utils.post_process(options, results)
@@ -158,7 +195,7 @@ class Dnsdb:
         """
         Query DNSDB API for the current quota of the given API key
 
-        :return: Object
+        :return: object
         """
 
         options = dict()
@@ -181,12 +218,70 @@ class Result:
     A object to store the results of a DNSDB Search and related meta data.
     """
 
-    def __init__(self, records=None, status_code=None, error=None, quota=None):
-
+    def __init__(
+        self, records=None, status_code=None, error=None, quota=None, cached=None
+    ):
+        """
+        :param records: list of dictionaries
+        :param status_code: integer
+            DNSDB status code
+        :param error: dictionary
+            DNSDB error message
+        :param quota: dictionary
+            DNSDB quota information
+        :param cached: boolean
+        """
         self.status_code = status_code
         self.records = records
         self.error = error
         self.quota = quota
+        self.cached = cached
+
+    def to_json(self):
+        """
+        TODO: fill out
+        :return:
+        """
+        data = Result.to_dict(self)
+        return json.dumps(data)
+
+    def to_dict(self):
+        """
+        TODO: fill out
+        :return:
+        """
+        data = dict(status_code=self.status_code,
+                    records=self.records,
+                    error=self.error,
+                    quota=self.quota,
+                    cached=self.cached)
+        return data
+
+    def to_compressed(self):
+        """
+        TODO: fill out
+        :return:
+        """
+        encoded = Result.to_json(self).encode("utf-8")
+        compressed = gzip.compress(bytes(encoded))
+        return compressed
+
+    def to_decompressed(compressed):
+        """
+        TODO: fill out
+        :param compressed:
+        :return:
+        """
+        data = json.loads(gzip.decompress(compressed).decode("utf-8"))
+
+        result = Result()
+        result.status_code = data['status_code']
+        result.records = data['records']
+        result.error = data['error']
+        result.quota = data['quota']
+        result.cached = data['cached']
+
+        return result
 
 
 def _query(options, uri, quota=False):
@@ -195,7 +290,7 @@ def _query(options, uri, quota=False):
 
     :param uri: string
     :param quota: boolean (default: False)
-    :return: Object
+    :return: object
     """
 
     results = Result()
@@ -207,6 +302,7 @@ def _query(options, uri, quota=False):
     resp = requests.get(uri, headers=headers, stream=True)
     results.status_code = resp.status_code
     results.quota = utils.get_quota(response_headers=resp.headers)
+    results.cached = False
 
     if resp.status_code == 200:
         records = []

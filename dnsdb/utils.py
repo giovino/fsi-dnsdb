@@ -345,3 +345,40 @@ def parse_date(options):
             options[time_field] = int(dt.timestamp())
 
     return options
+
+
+def debug(result):
+    """
+    Function to debug output using the console / ipython.
+
+    USAGE:::
+
+    from dnsdb.utils import debug
+    r = dnsdb.search(name="www.fsi.io")
+    debug(r)
+
+    :param result: object
+    :return: text: stdout
+    """
+
+    if result.status_code:
+        print("Status Code: {}".format(result.status_code))
+    else:
+        print("Status Code: None")
+    if result.error:
+        print("Error: {}".format(result.error))
+    else:
+        print("Error: None")
+    if result.quota:
+        print("Quota: {}".format(result.quota))
+    else:
+        print("Quota: None")
+    if result.cached:
+        print("Cached: {}".format(result.cached))
+    else:
+        print("Cached: None")
+    if result.records:
+        print("Records exist: True")
+        print("Number of records: {}".format(len(result.records)))
+    else:
+        print("Records exist: False")
