@@ -8,11 +8,13 @@ Python client for Farsight Security's [DNSDB API](https://api.dnsdb.info/).
  * sorting of results by last_seen
  * convert epoch to ISO 8601
  * normalize results with regard sensor or zone observation
+ * supports the caching of DNSDB API results
  * returns an object with the following attributes:
     * records
     * status code
     * error
-    * quota 
+    * quota
+    * cache
 
 ## Installation
 
@@ -104,6 +106,10 @@ result = dnsdb.search(name="fsi.io", time_last_after="2019-01-01")
 result = dnsdb.search(name="fsi.io", time_last_after="2019-01-01T00:00:00Z")
 result = dnsdb.search(name="fsi.io", epoch=True, time_last_after=1546300800)
 result = dnsdb.search(name="fsi.io", epoch=True)
+result = dnsdb.search(name="fsi.io", cache=True, cache_timeout=900)
+result = dnsdb.search(name="fsi.io",
+                      cache=True,
+                      cache_location="/tmp/dnsdb-cache")
 result = dnsdb.quota()
 ```
 
