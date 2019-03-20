@@ -35,12 +35,18 @@ result = dnsdb.search(name="fsi.io", sort=False)
 result = dnsdb.search(name="fsi.io", remote_limit=150000, return_limit=1000)
 result = dnsdb.search(name="fsi.io", time_last_after=1514764800)
 result = dnsdb.search(name="fsi.io", epoch=True)
+result = dnsdb.search(name="fsi.io", cache=True)
+result = dnsdb.search(name="fsi.io", cache=True, cache_timeout=900)
+result = dnsdb.search(name="fsi.io",
+                      cache=True,
+                      cache_location="/tmp/dnsdb-cache")
 result = dnsdb.quota()
 
 print(result.records)
 print(result.status_code)
 print(result.error)
 print(result.quota)
+print(result.cached)
 """
 
 import json
@@ -163,8 +169,6 @@ class Dnsdb:
         options["cache_location"] = self.cache_location
         options["cache_timeout"] = self.cache_timeout
 
-        results = None
-
         options = utils.pre_process(options)
 
         uri = utils.build_uri(options)
@@ -175,8 +179,14 @@ class Dnsdb:
             cached_result = cache.get(uri)
 
             if cached_result:
-                results = Result.to_decompressed(cached_result)
-                results.cached = True
+                data = json.loads(gzip.decompress(cached_result).decode("utf-8"))
+                results = Result(
+                    records=data["records"],
+                    status_code=data["status_code"],
+                    error=data["error"],
+                    quota=data["quota"],
+                    cached=True,
+                )
             else:
                 results = _query(options, uri)
                 if results.status_code == 200 or results.status_code == 404:
@@ -189,7 +199,7 @@ class Dnsdb:
             results = utils.post_process(options, results)
             return results
 
-        return results
+        return None
 
     def quota(self):
         """
@@ -237,51 +247,39 @@ class Result:
         self.quota = quota
         self.cached = cached
 
+    def to_dict(self):
+        """
+        Return the object as a dictionary
+
+        :return: dictionary
+        """
+        data = dict(
+            status_code=self.status_code,
+            records=self.records,
+            error=self.error,
+            quota=self.quota,
+            cached=self.cached,
+        )
+        return data
+
     def to_json(self):
         """
-        TODO: fill out
-        :return:
+        Return the object as a JSON string
+
+        :return: string
         """
         data = Result.to_dict(self)
         return json.dumps(data)
 
-    def to_dict(self):
-        """
-        TODO: fill out
-        :return:
-        """
-        data = dict(status_code=self.status_code,
-                    records=self.records,
-                    error=self.error,
-                    quota=self.quota,
-                    cached=self.cached)
-        return data
-
     def to_compressed(self):
         """
-        TODO: fill out
-        :return:
+        Return the object as a gzipped JSON string
+
+        :return: bytes
         """
         encoded = Result.to_json(self).encode("utf-8")
         compressed = gzip.compress(bytes(encoded))
         return compressed
-
-    def to_decompressed(compressed):
-        """
-        TODO: fill out
-        :param compressed:
-        :return:
-        """
-        data = json.loads(gzip.decompress(compressed).decode("utf-8"))
-
-        result = Result()
-        result.status_code = data['status_code']
-        result.records = data['records']
-        result.error = data['error']
-        result.quota = data['quota']
-        result.cached = data['cached']
-
-        return result
 
 
 def _query(options, uri, quota=False):

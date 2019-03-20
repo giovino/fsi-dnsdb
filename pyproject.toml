@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dnsdb"
-version = "0.2.1"
+version = "0.2.2"
 description = "Python client for Farsight Security's DNSDB API"
 license = "MIT"
 authors = ["Gabriel Iovino <giovino@gmail.com>"]
