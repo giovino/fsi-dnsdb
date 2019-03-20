@@ -47,7 +47,7 @@ class Result:
 
 
 def test_version():
-    assert __version__ == "0.2.2"
+    assert __version__ == "0.2.3"
 
 
 def get_options():
