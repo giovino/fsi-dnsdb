@@ -89,6 +89,9 @@ from dnsdb import Dnsdb
 
 api_key="12345"
 dnsdb = Dnsdb(api_key)
+dnsdb = Dnsdb(api_key, cache=True)
+dnsdb = Dnsdb(api_key, cache=True, cache_timeout=900)
+dnsdb = Dnsdb(api_key, cache=True, cache_location="/tmp/dnsdb-cache")
 
 result = dnsdb.search(name="fsi.io")
 result = dnsdb.search(name="mail.fsi.io", inverse=True)
@@ -106,10 +109,6 @@ result = dnsdb.search(name="fsi.io", time_last_after="2019-01-01")
 result = dnsdb.search(name="fsi.io", time_last_after="2019-01-01T00:00:00Z")
 result = dnsdb.search(name="fsi.io", epoch=True, time_last_after=1546300800)
 result = dnsdb.search(name="fsi.io", epoch=True)
-result = dnsdb.search(name="fsi.io", cache=True, cache_timeout=900)
-result = dnsdb.search(name="fsi.io",
-                      cache=True,
-                      cache_location="/tmp/dnsdb-cache")
 result = dnsdb.quota()
 ```
 

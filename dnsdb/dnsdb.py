@@ -199,7 +199,7 @@ class Dnsdb:
             results = utils.post_process(options, results)
             return results
 
-        return None
+        return results
 
     def quota(self):
         """
