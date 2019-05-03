@@ -15,6 +15,7 @@ Python client for Farsight Security's [DNSDB API](https://api.dnsdb.info/).
     * error
     * quota
     * cache
+ * CLI named `dnsdb`
 
 ## Installation
 
@@ -110,6 +111,100 @@ result = dnsdb.search(name="fsi.io", time_last_after="2019-01-01T00:00:00Z")
 result = dnsdb.search(name="fsi.io", epoch=True, time_last_after=1546300800)
 result = dnsdb.search(name="fsi.io", epoch=True)
 result = dnsdb.quota()
+```
+
+## CLI
+
+The `dnsdb` module includes CLI client
+
+## Help
+
+```test
+$ dnsdb -h
+usage: dnsdb [-h] (-n NAME | -i IP | --hex HEXADECIMAL) [-t TYPE]
+             [-b BAILIWICK] [-r] [--wildcard-left] [--wildcard-right] [--sort]
+             [--epoch] [-f {csv,json,jsonp}] [--return-limit RETURN_LIMIT]
+             [--remote-limit REMOTE_LIMIT] [--first-before TIME_FIRST_BEFORE]
+             [--first-after TIME_FIRST_AFTER] [--last-before TIME_LAST_BEFORE]
+             [--last_after TIME_LAST_AFTER] [--cache]
+             [--cache-location CACHE_LOCATION] [--cache-timeout CACHE_TIMEOUT]
+             [--apikey API_KEY] [--server SERVER] [-v] [-c CONFIG] [--version]
+
+CLI client for DNSDB
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -n NAME, --name NAME  fully qualified domain mame
+  -i IP, --ip IP        IPv4 or IPv6 address, CIDR notation is valid
+  --hex HEXADECIMAL     hexadecimal digits specifying a raw octet string
+  -t TYPE, --type TYPE  dns resource record types (ANY, A, MX, SIG, etc)
+  -b BAILIWICK, --bailiwick BAILIWICK
+                        a label in a fqdn, not valid for inverse queries
+  -r, --inverse         search for names resolving to names (e.g. MX, NS,
+                        CNAME, etc)
+  --wildcard-left       wildcard search to the left of a dot in a domain name
+  --wildcard-right      wildcard search to the right of a dot in a domain name
+  --sort                sort results by time last
+  --epoch               return timestamps in epoch
+  -f {csv,json,jsonp}, --format {csv,json,jsonp}
+                        output formats
+  --return-limit RETURN_LIMIT
+                        number of client side results returned
+  --remote-limit REMOTE_LIMIT
+                        number of server side results returned
+  --first-before TIME_FIRST_BEFORE
+                        server side filter for time first before
+  --first-after TIME_FIRST_AFTER
+                        server side filter for time first after
+  --last-before TIME_LAST_BEFORE
+                        server side filter for time last before
+  --last_after TIME_LAST_AFTER
+                        server side filter for time last after
+  --cache               Use cached results
+  --cache-location CACHE_LOCATION
+                        Path to cache
+  --cache-timeout CACHE_TIMEOUT
+                        Timeout in seconds
+  --apikey API_KEY      DNSDB API key
+  --server SERVER       Server URL
+  -v, --verbose         Set the verbosity level
+  -c CONFIG, --config CONFIG
+                        Path to config file
+  --version             show program's version number and exit
+
+Time format options: yyyy (2016), yyyy-mm (2016-01), yyyy-mm-dd (2016-01-01),
+yyyymmdd (20160101), yyyymmddThh (20160101T12), yyyy-mm-ddThh:mm:ss-hh:mm
+(2016-01-01T00:00:00-00:00)
+```
+
+### Configuration file
+
+### Minimal
+```text
+$ vim ~/.dnsdb.ini
+
+[api.dnsdb.info]
+api_key=12345
+```
+
+### Full
+
+```text
+$ vim ~/.dnsdb.ini
+
+[api.dnsdb.info]
+api_key=12345
+server=https://api.dnsdb.info
+cache=True
+cache_location=/tmp/dnsdb-cache
+cache_timeout=900
+```
+
+### Usage
+
+```text
+$ dnsdb -n www.fsi.io
+$ dnsdb -i 104.244.14.108 -f csv
 ```
 
 ## Contributing
