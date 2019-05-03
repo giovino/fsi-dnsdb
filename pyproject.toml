@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dnsdb"
-version = "0.2.4"
+version = "0.2.5"
 description = "Python client for Farsight Security's DNSDB API"
 license = "MIT"
 authors = ["Gabriel Iovino <giovino@gmail.com>"]
@@ -17,6 +17,13 @@ diskcache = "^3.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"
+pylint = "^2.3"
+flake8 = "^3.7"
+ipython = "^7.5"
+black = {version = "^18.3-alpha.0",allows-prereleases = true}
+
+[tool.poetry.scripts]
+dnsdb = "dnsdb.cli.cli:main"
 
 [build-system]
 requires = ["poetry>=0.12"]

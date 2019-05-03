@@ -13,11 +13,14 @@ from dnsdb import __version__
 from dnsdb.cli import utils
 from dnsdb import Dnsdb
 
-
 DEFAULT_CONFIG_FILE = os.path.expanduser("~/.dnsdb.ini")
 
 
 def main():
+    """
+    Main function
+    :return: Shell exit code (0 or 1)
+    """
 
     dnsdb_param = dict(api_key=None)
     dnsdb_search_param = dict()
@@ -36,13 +39,13 @@ def main():
         dest="hexadecimal",
         help="hexadecimal digits specifying a raw octet string",
     )
-    group.add_argument(
+    parser.add_argument(
         "-t",
         "--type",
         dest="type",
         help="dns resource record types (ANY, A, MX, SIG, etc)",
     )
-    group.add_argument(
+    parser.add_argument(
         "-b",
         "--bailiwick",
         dest="bailiwick",
@@ -72,6 +75,14 @@ def main():
     )
     parser.add_argument(
         "--epoch", action="store_true", default=False, help="return timestamps in epoch"
+    )
+    parser.add_argument(
+        "-f",
+        "--format",
+        dest="oformat",
+        choices=["csv", "json", "jsonp"],
+        default="json",
+        help="output formats",
     )
     parser.add_argument(
         "--return-limit",
@@ -137,6 +148,8 @@ def main():
     logging.basicConfig(level=log_level, format="%(message)s")
     logger = logging.getLogger()
 
+    logger.debug("args: %s", vars(args))
+
     if os.path.isfile(args.config):
         config = configparser.ConfigParser()
         config.read(args.config)
@@ -155,11 +168,9 @@ def main():
             dnsdb_param["cache_timeout"] = config["api.dnsdb.info"].getint(
                 "cache_timeout"
             )
+        logger.debug("config: %s", dnsdb_param)
     else:
-        logger.debug("Config file not found: {}".format(args.config))
-
-    logger.debug(dnsdb_param)
-    logger.debug(vars(args))
+        logger.debug("Config file not found: %s", args.config)
 
     # command line arguments take precedent over values specified in conf file
     valid_dnsdb_parameters = [
@@ -199,16 +210,25 @@ def main():
                 args, dnsdb_search_parameter
             )
 
-    logger.debug(dnsdb_param)
-    logger.debug(dnsdb_search_param)
-
     if dnsdb_param["api_key"] is not None:
         dnsdb = Dnsdb(**dnsdb_param)
         result = dnsdb.search(**dnsdb_search_param)
-        print(result.records[0])
+        logger.debug("status_code: %s", result.status_code)
+        logger.debug("error: %s", result.error)
+        logger.debug("cached: %s", result.cached)
+        logger.debug("quota: %s", result.quota)
     else:
         logger.critical("Error: API key not specified")
         sys.exit(1)
+
+    if result.status_code == 403:
+        logger.critical("Invalid API key")
+        sys.exit(1)
+
+    if result.records:
+        utils.output(args.oformat, result.records)
+    else:
+        logger.info("No records found")
 
     sys.exit(0)
 
